@@ -1,17 +1,13 @@
-import React, { useState } from "react";
-import { Upload, FileText } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Upload, FileText } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const ImageToCodeGenerator = () => {
   const [selectedImage, setSelectedImage] = useState(null);
-  const [generatedCode, setGeneratedCode] = useState("");
+  const [generatedCode, setGeneratedCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
@@ -19,28 +15,37 @@ const ImageToCodeGenerator = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target.result);
-        // Simulate code generation
-        setTimeout(() => {
-          setGeneratedCode(`
-// Generated React component
-import React from 'react';
-
-const GeneratedComponent = () => {
-  return (
-    <div className="p-4 bg-gray-100 rounded-lg">
-      <h2 className="text-xl font-bold mb-2">Generated Component</h2>
-      <button className="bg-blue-500 text-white px-4 py-2 rounded">
-        Click me
-      </button>
-    </div>
-  );
-};
-
-export default GeneratedComponent;
-          `);
-        }, 1500);
+        setGeneratedCode(''); // Reset generated code when new image is uploaded
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const generateCode = async () => {
+    if (!selectedImage) return;
+
+    setIsLoading(true);
+    try {
+      // In a real application, replace this URL with your actual API endpoint
+      const response = await fetch('https://api.example.com/generate-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: selectedImage }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate code');
+      }
+
+      const data = await response.json();
+      setGeneratedCode(data.generatedCode);
+    } catch (error) {
+      console.error('Error generating code:', error);
+      setGeneratedCode('Error: Failed to generate code. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,9 +55,8 @@ export default GeneratedComponent;
         <CardHeader>
           <CardTitle>Image to Code Generator</CardTitle>
           <CardDescription>
-            Transform your UI designs into ready-to-use React components. Simply
-            upload an image of your design, and we'll generate the corresponding
-            code.
+            Transform your UI designs into ready-to-use React components. 
+            Simply upload an image of your design, and we'll generate the corresponding code.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -63,27 +67,21 @@ export default GeneratedComponent;
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center w-full">
-            <label
-              htmlFor="image-upload"
-              className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
-            >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+            <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 overflow-hidden">
+              <div className="flex flex-col items-center justify-center p-5">
                 {selectedImage ? (
-                  <img
-                    src={selectedImage}
-                    alt="Uploaded"
-                    className="max-h-48 mb-4 rounded-lg"
-                  />
+                  <div className="w-full max-h-64 flex items-center justify-center overflow-hidden">
+                    <img src={selectedImage} alt="Uploaded" className="max-w-full max-h-full object-scale-down" />
+                  </div>
                 ) : (
-                  <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                  <>
+                    <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                  </>
                 )}
-                <p className="mb-2 text-sm text-gray-500">
-                  <span className="font-semibold">Click to upload</span> or drag
-                  and drop
-                </p>
-                <p className="text-xs text-gray-500">
-                  SVG, PNG, JPG or GIF (MAX. 800x400px)
-                </p>
               </div>
               <input
                 id="image-upload"
@@ -94,6 +92,11 @@ export default GeneratedComponent;
               />
             </label>
           </div>
+          {selectedImage && (
+            <Button onClick={generateCode} disabled={isLoading} className="mt-4">
+              {isLoading ? 'Generating...' : 'Generate Code'}
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -111,8 +114,10 @@ export default GeneratedComponent;
       ) : (
         <Alert>
           <FileText className="h-4 w-4" />
-          <AlertTitle>Waiting for image</AlertTitle>
-          <AlertDescription>Upload an image to generate code</AlertDescription>
+          <AlertTitle>Waiting for code generation</AlertTitle>
+          <AlertDescription>
+            Upload an image and click "Generate Code" to get started
+          </AlertDescription>
         </Alert>
       )}
     </div>
