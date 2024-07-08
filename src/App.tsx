@@ -4,6 +4,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+const BACKEND_URL = 'http://127.0.0.1:3000';
+
 const ImageToCodeGenerator = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [generatedCode, setGeneratedCode] = useState('');
@@ -27,7 +29,7 @@ const ImageToCodeGenerator = () => {
     setIsLoading(true);
     try {
       // In a real application, replace this URL with your actual API endpoint
-      const response = await fetch('https://api.example.com/generate-code', {
+      const response = await fetch(`${BACKEND_URL}/generate-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
