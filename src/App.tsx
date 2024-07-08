@@ -42,7 +42,7 @@ const ImageToCodeGenerator = () => {
       }
 
       const data = await response.json();
-      setGeneratedCode(data.generatedCode);
+      setGeneratedCode(data.code);
     } catch (error) {
       console.error('Error generating code:', error);
       setGeneratedCode('Error: Failed to generate code. Please try again.');
