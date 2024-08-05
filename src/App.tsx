@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Upload, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -9,16 +9,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import LivePreview from "./LivePreview";
+import * as LucideIcons from 'lucide-react';
+import LiveCodePreview from './LiveCodePreview';
+import LiveCodeEditor from './LiveCodeEditor';
 
 const BACKEND_URL = "http://127.0.0.1:3000";
 
 const ImageToCodeGenerator = () => {
-  const [selectedImage, setSelectedImage] = useState<
-    string | ArrayBuffer | null | undefined
-  >(null);
+  const [selectedImage, setSelectedImage] = useState<string | ArrayBuffer | null | undefined>(null);
   const [generatedCode, setGeneratedCode] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPreview, setShowPreview] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (generatedCode) {
+      setTimeout(() => setShowPreview(true), 100);
+    } else {
+      setShowPreview(false);
+    }
+  }, [generatedCode]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];
@@ -61,9 +70,26 @@ const ImageToCodeGenerator = () => {
     }
   };
 
+  const scope = {
+    ...LucideIcons,
+    React,
+    // Add any other dependencies you want to make available
+  };
+
+  const wrappedCode = `
+    ${generatedCode}
+
+    render(
+      <React.StrictMode>
+        <CodeComponent />
+      </React.StrictMode>
+    );
+  `;
+
   return (
-    <div className="mx-auto p-4">
-      <div className="max-w-5xl mx-auto">
+    <div className={`h-screen overflow-hidden ${generatedCode ? 'flex' : 'flex justify-center'}`}>
+      <div className={`transition-all duration-500 ease-in-out ${showPreview ? 'w-1/2' : 'w-full'} 
+                       ${!generatedCode ? 'max-w-5xl' : ''} overflow-y-auto p-4`}>
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Image to Code Generator</CardTitle>
@@ -89,7 +115,7 @@ const ImageToCodeGenerator = () => {
                   {selectedImage ? (
                     <div className="w-full max-h-64 flex items-center justify-center overflow-hidden">
                       <img
-                        src={selectedImage}
+                        src={selectedImage as string}
                         alt="Uploaded"
                         className="max-w-full max-h-full object-scale-down"
                       />
@@ -127,18 +153,9 @@ const ImageToCodeGenerator = () => {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      <div className="max-w-5xl mx-auto">
         {generatedCode ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LivePreview code={generatedCode} />
-            </CardContent>
-          </Card>
+          <LiveCodeEditor code={wrappedCode} scope={scope} />
         ) : (
           <Alert>
             <FileText className="h-4 w-4" />
@@ -149,6 +166,12 @@ const ImageToCodeGenerator = () => {
           </Alert>
         )}
       </div>
+
+      {showPreview && (
+        <div className="w-1/2 overflow-hidden transition-all duration-500 ease-in-out p-4">
+          <LiveCodePreview code={wrappedCode} scope={scope} />
+        </div>
+      )}
     </div>
   );
 };
