@@ -2,7 +2,6 @@ import React from 'react';
 import { LiveProvider, LiveEditor, LiveError, LivePreview } from 'react-live';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import * as LucideIcons from 'lucide-react';
-import * as TailwindCSS from 'tailwindcss/plugin';
 
 interface LiveCodePreviewProps {
     code: string;
@@ -11,7 +10,6 @@ interface LiveCodePreviewProps {
 const LiveCodePreview = ({ code }: LiveCodePreviewProps) => {
   const scope = {
     ...LucideIcons,
-    ...TailwindCSS,
     React, // Make sure React is available in the scope
     // Add any other dependencies you want to make available
   };
