@@ -9,25 +9,45 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import * as LucideIcons from 'lucide-react';
-import LiveCodePreview from './LiveCodePreview';
-import LiveCodeEditor from './LiveCodeEditor';
+import * as LucideIcons from "lucide-react";
+import LiveCodePreview from "./LiveCodePreview";
+import LiveCodeEditor from "./LiveCodeEditor";
 
 const BACKEND_URL = "http://127.0.0.1:3000";
 
 const ImageToCodeGenerator = () => {
-  const [selectedImage, setSelectedImage] = useState<string | ArrayBuffer | null | undefined>(null);
+  const [selectedImage, setSelectedImage] = useState<
+    string | ArrayBuffer | null | undefined
+  >(null);
   const [generatedCode, setGeneratedCode] = useState<string>("");
+  const [wrappedCode, setWrappedCode] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPreview, setShowPreview] = useState<boolean>(false);
 
   useEffect(() => {
-    if (generatedCode) {
+    if (generatedCode.trim().length > 0) {
       setTimeout(() => setShowPreview(true), 100);
+      handleGenerateCode(generatedCode);
     } else {
       setShowPreview(false);
     }
   }, [generatedCode]);
+
+  const handleGenerateCode = async (code: string) => {
+    if (!code) return;
+    if (code.includes("React.StrictMode")) {
+      setWrappedCode(code);
+    } else {
+      setWrappedCode(`
+        ${code}
+        render(
+          <React.StrictMode>
+            <CodeComponent />
+          </React.StrictMode>
+        );
+      `);
+    }
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event?.target?.files?.[0];
@@ -72,24 +92,27 @@ const ImageToCodeGenerator = () => {
 
   const scope = {
     ...LucideIcons,
+    Button,
     React,
     // Add any other dependencies you want to make available
   };
 
-  const wrappedCode = `
-    ${generatedCode}
-
-    render(
-      <React.StrictMode>
-        <CodeComponent />
-      </React.StrictMode>
-    );
-  `;
+  const onCodeChange = (code: string) => {
+    setGeneratedCode(code);
+  };
 
   return (
-    <div className={`h-screen overflow-hidden ${generatedCode ? 'flex' : 'flex justify-center'}`}>
-      <div className={`transition-all duration-500 ease-in-out ${showPreview ? 'w-1/2' : 'w-full'} 
-                       ${!generatedCode ? 'max-w-5xl' : ''} overflow-y-auto p-4`}>
+    <div
+      className={`h-screen overflow-hidden ${
+        wrappedCode ? "flex" : "flex justify-center"
+      }`}
+    >
+      <div
+        className={`transition-all duration-500 ease-in-out ${
+          showPreview ? "w-1/2" : "w-full"
+        } 
+                       ${!wrappedCode ? "max-w-5xl" : ""} overflow-y-auto p-4`}
+      >
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Image to Code Generator</CardTitle>
@@ -154,8 +177,12 @@ const ImageToCodeGenerator = () => {
           </CardContent>
         </Card>
 
-        {generatedCode ? (
-          <LiveCodeEditor code={wrappedCode} scope={scope} />
+        {wrappedCode ? (
+          <LiveCodeEditor
+            code={wrappedCode}
+            scope={scope}
+            onCodeChange={onCodeChange}
+          />
         ) : (
           <Alert>
             <FileText className="h-4 w-4" />
