@@ -12,3 +12,5 @@ Motivation: I was simply curious to see how Claude 3.5 Sonnet would generate a w
 
 ## Example
 
+https://github.com/user-attachments/assets/d90e437c-501d-4b58-a122-87b59366addc
+
